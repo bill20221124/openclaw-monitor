@@ -8,123 +8,151 @@ GitHub Copilot (gpt-4o)
 
 ---
 
-## 发现的问题及修复
+## 第一轮修复（基础优化）
 
-### 1. 缺少 .gitignore ⚠️
-**状态**: ✅ 已修复
-
-添加了标准的 .gitignore 文件，排除：
-- node_modules/
-- dist/
-- .env
-- .vscode/
-- *.log
-
----
-
-### 2. Mock 数据硬编码 ⚠️
-**状态**: ✅ 已修复
-
-将 Mock 数据提取到 `src/lib/mock.ts`：
-- `mockAgents` - Agent 数据
-- `mockTasks` - 任务数据
-- `mockMessages` - 消息数据
-- `mockSkills` - 技能数据
-- `mockLogs` - 日志数据
-
-好处：
-- 统一管理 Mock 数据
-- 便于后续替换为真实 API
-- 提高代码可维护性
-
----
-
-### 3. 缺少 Error Boundary ⚠️
-**状态**: ✅ 已修复
-
-添加了 `src/components/common/ErrorBoundary.tsx`：
-- 捕获组件渲染错误
-- 显示友好的错误界面
-- 提供"重试"按钮
-
-并在 `App.tsx` 中使用：
-
-```tsx
-<ErrorBoundary>
-  <BrowserRouter>
-    ...
-  </BrowserRouter>
-</ErrorBoundary>
-```
-
----
-
-### 4. CORS 配置过于宽松 ⚠️
-**状态**: ✅ 已修复
-
-修改 `backend/src/index.ts`：
-```typescript
-// 之前
-cors: { origin: '*' }
-
-// 之后
-const corsOptions = {
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-}
-app.use(cors(corsOptions))
-```
-
----
-
-### 5. 端口验证缺失 ⚠️
-**状态**: ✅ 已修复
-
-添加了端口验证：
-```typescript
-const PORT = parseInt(process.env.PORT || '8080', 10)
-
-if (isNaN(PORT) || PORT < 1 || PORT > 65535) {
-  console.error('Invalid PORT:', process.env.PORT)
-  process.exit(1)
-}
-```
-
----
-
-## 额外改进
-
-### 添加环境变量模板
-创建了 `backend/.env.example`，包含：
-- PORT
-- CORS_ORIGIN
-- Appwrite 配置占位
-
----
-
-## 修复后的文件清单
-
-| 文件 | 操作 |
+| 问题 | 状态 |
 |------|------|
-| `.gitignore` | 新增 |
-| `frontend/src/lib/mock.ts` | 新增 |
-| `frontend/src/components/common/ErrorBoundary.tsx` | 新增 |
-| `frontend/src/App.tsx` | 修改 |
-| `frontend/src/pages/Dashboard.tsx` | 修改 |
-| `backend/src/index.ts` | 修改 |
-| `backend/.env.example` | 新增 |
+| 缺少 .gitignore | ✅ 已修复 |
+| Mock 数据硬编码 | ✅ 已修复 |
+| 缺少 Error Boundary | ✅ 已修复 |
+| CORS 配置过于宽松 | ✅ 已修复 |
+| 端口验证缺失 | ✅ 已修复 |
+
+---
+
+## 第二轮优化（架构级）
+
+### 1. API 接口完善 ✅
+
+按设计文档 5.x 章节完善所有 API：
+
+#### Agents API
+- GET /api/agents
+- GET /api/agents/stats（新增）
+- GET /api/agents/:id
+- GET /api/agents/:id/tasks（新增）
+- GET /api/agents/:id/messages（新增）
+- POST /api/agents
+- PUT /api/agents/:id
+- DELETE /api/agents/:id
+- POST /api/agents/:id/start（新增）
+- POST /api/agents/:id/stop（新增）
+- POST /api/agents/:id/restart（新增）
+- POST /api/agents/:id/heartbeat（新增）
+
+#### Tasks API
+- GET /api/tasks
+- GET /api/tasks/stats
+- GET /api/tasks/:id
+- POST /api/tasks
+- PUT /api/tasks/:id
+- POST /api/tasks/:id/start（新增）
+- POST /api/tasks/:id/cancel
+- POST /api/tasks/:id/progress（新增）
+- POST /api/tasks/:id/complete（新增）
+- POST /api/tasks/:id/fail（新增）
+- DELETE /api/tasks/:id
+
+#### Messages API
+- GET /api/messages
+- GET /api/messages/stats
+- GET /api/messages/search（新增）
+- GET /api/messages/:id
+- POST /api/messages
+- POST /api/messages/agent/:agentId（新增）
+- DELETE /api/messages/:id
+
+#### Skills API
+- GET /api/skills
+- GET /api/skills/stats
+- GET /api/skills/:id
+- GET /api/skills/:id/calls（新增）
+- POST /api/skills
+- POST /api/skills/:id/call（新增）
+- DELETE /api/skills/:id
+
+#### Logs API
+- GET /api/logs
+- GET /api/logs/stats
+- GET /api/logs/:id
+- POST /api/logs
+- DELETE /api/logs
+- GET /api/logs/alerts
+- POST /api/logs/alerts
+- POST /api/logs/alerts/:id/acknowledge（新增）
+- DELETE /api/logs/alerts/:id
+
+---
+
+### 2. 输入验证 ✅
+
+使用 Zod 添加完整的输入验证：
+- createAgentSchema
+- updateAgentSchema
+- createTaskSchema
+- updateTaskSchema
+- createMessageSchema
+- createSkillSchema
+- callSkillSchema
+- createLogSchema
+
+---
+
+### 3. 错误处理统一 ✅
+
+所有路由添加：
+- try-catch 块
+- 统一的错误响应格式
+- 详细的错误日志
+
+---
+
+### 4. 日志记录 ✅
+
+添加请求日志中间件
+
+---
+
+### 5. 数据统计完善 ✅
+
+- Agent 统计：在线数、任务数、消息数
+- Task 统计：按状态、按类型、成功率
+- Message 统计：按渠道、按方向、平均响应时间
+- Skill 统计：Top 技能，最慢技能、按类别
+- Log 统计：按级别、按来源
+
+---
+
+### 6. 告警系统 ✅
+
+新增告警功能
+
+---
+
+## 技术栈更新
+
+| 依赖 | 用途 |
+|------|------|
+| zod | 输入验证 |
+
+---
+
+## Git 提交记录
+
+1. `68beb32` - 初始项目
+2. `338fe9a` - 第一轮修复
+3. `fb0f590` - 全面架构优化
 
 ---
 
 ## 后续建议
 
-1. **数据层**：使用 React Query / SWR 获取真实 API 数据
-2. **认证**：添加用户认证功能
-3. **测试**：添加单元测试和集成测试
-4. **部署**：配置 CI/CD
+1. 数据层：使用 React Query / SWR 获取真实 API 数据
+2. 认证：添加用户认证功能
+3. 测试：添加单元测试和集成测试
+4. 部署：配置 CI/CD
+5. Appwrite：配置真实数据库
 
 ---
 
-*审查完成 ✅*
+*优化完成 ✅*
