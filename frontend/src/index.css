@@ -1,0 +1,92 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: #00D4FF;
+  --primary-dark: #0088AA;
+  --secondary: #FF6B35;
+  --success: #00C853;
+  --warning: #FFD600;
+  --error: #FF1744;
+  --info: #2979FF;
+  --bg-primary: #0A0E17;
+  --bg-secondary: #141B2D;
+  --bg-tertiary: #1E2746;
+  --bg-hover: #2A3655;
+  --text-primary: #FFFFFF;
+  --text-secondary: #8B9DC3;
+  --text-muted: #5A6A8A;
+  --border-color: #2A3655;
+}
+
+body {
+  @apply bg-bg-primary text-text-primary font-body;
+  margin: 0;
+  min-height: 100vh;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-bg-secondary;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-border-color rounded;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-text-muted;
+}
+
+/* Pulse animation for status indicators */
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 8px currentColor;
+  }
+  50% {
+    opacity: 0.6;
+    box-shadow: 0 0 16px currentColor;
+  }
+}
+
+.status-pulse {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Scan line effect */
+.scan-line {
+  position: relative;
+  overflow: hidden;
+}
+
+.scan-line::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(0, 212, 255, 0.3),
+    transparent
+  );
+  animation: scan 3s linear infinite;
+}
+
+@keyframes scan {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(2500%);
+  }
+}
